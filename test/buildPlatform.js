@@ -36,11 +36,23 @@ describe('buildPlatform', function() {
     });
   });
 
-  it('should build the proper files', function() {
+  it('should build web platform files', function() {
     test.buildPlatform('web');
-    assert(helpers.fileExists('./test/output/web/_icons.scss'));
+    assert(helpers.fileExists('./test/output/web/_icons.css'));
     assert(helpers.fileExists('./test/output/web/_styles.js'));
-    assert(helpers.fileExists('./test/output/web/_variables.scss'));
+    assert(helpers.fileExists('./test/output/web/_variables.css'));
+  });
+
+  it('should build scss platform files', function() {
+    test.buildPlatform('scss');
+    assert(helpers.fileExists('./test/output/scss/_icons.scss'));
+    assert(helpers.fileExists('./test/output/scss/_variables.scss'));
+  });
+
+  it('should build less platform files', function() {
+    test.buildPlatform('less');
+    assert(helpers.fileExists('./test/output/less/_icons.less'));
+    assert(helpers.fileExists('./test/output/less/_variables.less'));
   });
 
   it('should do android stuff', function() {
@@ -56,5 +68,66 @@ describe('buildPlatform', function() {
     test.buildPlatform('ios');
     assert(helpers.fileExists('./test/output/ios/style_dictionary.plist'));
     assert(helpers.fileExists('./test/output/ios/style_dictionary.h'));
+  });
+
+  it('should handle non-string values in properties', function() {
+    var test = StyleDictionary.extend({
+      source: ['test/properties/nonString.json'],
+      platforms: {
+        test: {
+          buildPath: "test/output/",
+          transforms: ["attribute/cti","size/px","color/hex"],
+          files: [
+            {
+              "destination": "output.json",
+              "format": "json"
+            }
+          ]
+        }
+      }
+    });
+    test.buildPlatform('test');
+    assert(helpers.fileExists('./test/output/output.json'));
+    // var input = helpers.fileToJSON('./test/properties/nonString.json');
+    var output = helpers.fileToJSON('./test/output/output.json');
+
+    // Make sure transforms run on non-string values as they normally would
+    assert.equal(output.color.red.value, output.color.otherRed.value);
+    assert.equal(output.color.red.value, "#ff0000");
+    assert.equal(output.size.large.value, output.size.otherLarge.value);
+    assert.equal(output.size.large.value, "20px");
+
+    // Make sure
+    assert.equal(output.number.test.value, output.number.otherTest.value);
+    assert.isNumber(output.number.otherTest.value);
+    assert.deepEqual(output.array.test.value, output.array.otherTest.value);
+    assert.isArray(output.array.otherTest.value);
+    assert.deepEqual(output.object.test.value, output.object.otherTest.value);
+    assert.isObject(output.object.otherTest.value);
+  });
+
+  it('should handle non-property nodes', function() {
+    var test = StyleDictionary.extend({
+      source: ['test/properties/nonPropertyNode.json'],
+      platforms: {
+        test: {
+          buildPath: "test/output/",
+          transformGroup: "scss",
+          files: [
+            {
+              "destination": "output.json",
+              "format": "json"
+            }
+          ]
+        }
+      }
+    });
+    test.buildPlatform('test');
+    assert(helpers.fileExists('./test/output/output.json'));
+    var input = helpers.fileToJSON('./test/properties/nonPropertyNode.json');
+    var output = helpers.fileToJSON('./test/output/output.json');
+    assert.deepEqual(output.color.comment, input.color.comment);
+    assert.deepEqual(output.color.base.comment, input.color.base.comment);
+    assert.equal(output.color.base.attributes.comment, input.color.base.attributes.comment);
   });
 });

@@ -12,7 +12,8 @@
  */
 
 var assert      = require('chai').assert,
-    combineJSON = require('../../lib/utils/combineJSON');
+    combineJSON = require('../../lib/utils/combineJSON'),
+    path = require('path');
 
 
 describe('combineJSON', function() {
@@ -23,6 +24,13 @@ describe('combineJSON', function() {
 
   it('should handle wildcards', function () {
     var test = combineJSON(["test/json_files/*.json"]);
+    assert.isObject(test);
+  });
+
+  it('should handle js modules that export objects', function () {
+    var absPath = path.join(process.cwd(), 'test', 'json_files', '*.js');
+    var relativePath = 'test/json_files/*.js';
+    var test = combineJSON([absPath, relativePath]);
     assert.isObject(test);
   });
 
@@ -41,6 +49,14 @@ describe('combineJSON', function() {
     assert.deepEqual(test.c, [3,4]);
     assert(!test.d.e.f.g);
     assert.equal(test.d.e.f.h, 2);
+  });
+
+  it('should fail on invalid JSON', function() {
+    assert.throws(
+      combineJSON.bind(null, ["test/json_files/broken/*.json"], true),
+      Error,
+      /Failed to load or parse/
+    );
   });
 
   it('should fail if there is a collision and it is passed a collision function', function() {

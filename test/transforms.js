@@ -13,7 +13,6 @@
 
 var assert     = require('chai').assert,
     path       = require('path'),
-    helpers    = require('./helpers'),
     transforms = require('../lib/common/transforms');
 
 
@@ -278,6 +277,22 @@ describe('transforms', function() {
     });
   });
 
+
+  describe('color/css', function() {
+    it('should handle normal colors', function() {
+      var value = transforms["color/css"].transformer({
+        value: "rgb(170, 170, 170)"
+      });
+      assert.equal(value, "#aaaaaa");
+    });
+
+    it('should handle colors with transparency', function() {
+      var value = transforms["color/css"].transformer({
+        value: "#aaaaaa99"
+      });
+      assert.equal(value, "rgba(170, 170, 170, 0.6)");
+    });
+  });
 
   describe('size/sp', function() {
     it('should work', function() {

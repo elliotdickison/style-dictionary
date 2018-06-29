@@ -11,13 +11,19 @@
  * and limitations under the License.
  */
 
-var vm = require('vm'),
+var assert  = require('chai').assert,
+    fs = require('fs-extra'),
+    helpers = require('../helpers'),
     formats = require('../../lib/common/formats');
 
 var file = {
   "destination": "output/",
-  "format": "javascript/object",
-  "name": "foo"
+  "format": "javascript/umd",
+  "filter": {
+    "attributes": {
+      "category": "color"
+    }
+  }
 };
 
 var dictionary = {
@@ -28,17 +34,18 @@ var dictionary = {
   }
 };
 
-var formatter = formats['javascript/object'].bind(file);
+var formatter = formats['javascript/umd'].bind(file);
 
 describe('formats', function() {
-  describe('javascript/object', function() {
-    it('should be valid JS syntax', function(done){
-      try {
-        vm.runInNewContext(formatter(dictionary))
-        return done();
-      } catch (err) {
-        return done(new Error(err));
-      }
+  describe('javascript/umd', function() {
+    beforeEach(function() {
+      helpers.clearOutput();
+    });
+
+    it('should be a valid JS file', function() {
+      fs.writeFileSync('./test/output/umd.js', formatter(dictionary) );
+      var test = require('../output/umd.js');
+      assert.equal( test.color.red.value, dictionary.properties.color.red.value );
     });
   });
 });
